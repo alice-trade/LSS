@@ -1,0 +1,174 @@
+Manager:
+<manager name="name">
+    <period value="1d"/>	- период
+    <loader name="test1"/>	- список запускаемых лоадеров
+    <loader name="test2"/>
+    ......................
+    <manager name="test1"/>	- список запускаемых вложенных менеджеров
+    <manager name="test2"/>	
+    ......................
+    <notify name="admin"/>
+</manager>
+
+Формат period:
+	%d%c
+, где %c - символ m (минуты), h (часы) или d (дни)
+
+
+У менеджера можно задать нотификатор, как сделано выше в примере.
+Для описания самого нотификатора применяется следующая конструкция (к примеру):
+
+    <notify name="admin" type="email" on_ok="yes">
+        <data>email1@test.ru</data>
+        <data>email@test.ru</data>
+    </notify>
+, где поля name - имя нотификатора,
+           type - тип нотификатора email, sms, etc
+	   on_ok - флаг посылать лог при успешном завершении
+	   
+	   
+Формат критических ошибок:
+Critical ........ Error [имя_хоста][pid:ppid] имя_програмы имя_функции строка_ошибки
+
+---------------------------------------------------------------------------------------------------------------
+loader
+    
+    /configuration/directory/processors[@value] 	-> (directory)
+    /configuration/loader[@name='%s']/processor		-> list_processors
+
+example:
+    <loader name="..." timeout="..." retry="..." sleep="...">
+	..................
+    </loader>
+
+---------------------------------------------------------------------------------------------------------------
+java_proc
+    /configuration/loader[@name='%s']/processor[@name='%s']/param[@name='options']" 	-> (value)
+    
+example:
+    <processor name="java_proc">
+		<param name="program" value="/..../java"/>
+		<param name="options" value="..."/>
+		<param name="options" value="..."/>
+		...............................	
+    </loader>
+
+---------------------------------------------------------------------------------------------------------------
+nfc_proc
+    /configuration/loader[@name='%s']/processor[@name='%s']/param[@name='directory']"	-> (value)
+    /configuration/loader[@name='%s']/processor[@name='%s']/param[@name='agregator']"	-> (value)
+    /configuration/loader[@name='%s']/processor[@name='%s']/param[@name='router']" 	-> (value)
+    /configuration/loader[@name='%s']/processor[@name='%s']/param[@name='type']" 	-> (value)
+
+example:
+    <processor name="nfc_proc">
+        <param name="directory" value="/u01/nfc1-ekt"/>
+        <param name="agregator" value="DetailHostMatrix"/>
+        <param name="router" 	value="10.80.1.2"/>
+        <param name="type" 	value="nfc"/>
+   </processor>        
+   
+   
+---------------------------------------------------------------------------------------------------------------
+   
+run_proc
+    /configuration/loader[@name='%s']/processor[@name='%s']/param[@name='program'] 	-> (program_name)
+    /configuration/loader[@name='%s']/processor[@name='%s']/param[@name='options'] 	-> (value)
+
+
+Example:
+   <processor name="run_proc">
+       <param name="program" value="/usr/bin/ssh"/>
+       <param name="options" value="-T"/>
+       <param name="options" value="-i"/>
+       <param name="options" value="/opt/lss/private/identity"/>
+       <param name="options" value="email@test.ru"/>
+  </processor>
+
+---------------------------------------------------------------------------------------------------------------
+
+cmd_proc
+    Преобразовывает и передаёт аргументы командной строки на stdout
+    
+Example:
+    ./cmd_proc /opt/lss/lss.conf test 2005-01-01 24
+    test 2005-01-01 14
+
+---------------------------------------------------------------------------------------------------------------
+
+cmdn_proc
+    Преобразовывает и передаёт аргументы командной строки на stdout, так же перекидывает stdin в stdout.
+    
+Example: 
+    echo "helo helo helo" | ./cmdn_proc /opt/lss/lss.conf test 2005-01-01 24
+    test 2005-01-01 24
+    helo helo helo
+
+---------------------------------------------------------------------------------------------------------------
+
+sql_proc
+    Входной поток выгружает в базу данных Oracle
+    
+Example:
+   <processor name="sql_proc">
+       <param name="options" value="userid=stpi_loader/Me3wbx3RNbi3"/>
+       <param name="options" value="control=/opt/lss/etc/dhm.ctl"/>
+       <param name="options" value="rows=100000"/>
+       <param name="options" value="errors=100"/>
+  </processor>    
+
+ok_proc - процессор заглушка, посылает на stdout - ok
+
+error_proc - процессор заглушка, посылает на stdout - error
+
+mgr_proc - процессор, запускающий последовательно менеджеры, запуск происходит после получения на stdin - ok, использует версию протокола 4.0, если менеджер завершается нормально, то процессор посылает на stdout ok, иначе error.
+
+jobs_proc - процессор, который вызывает последовательно лоадеры, передавая им задания
+
+Протокол PJ1: (входной протокол для jobs_proc)
+#LOADER имя_лоадера_1
+........
+........
+........
+#LOADER имя_лоадера_2
+........
+........
+........
+EOF
+
+Протокол PJ2: (выходной протокол для jobs_proc)
+
+#BEGIN_BLOCK
+.........
+.........
+#END_BLOCK
+
+#BEGIN_BLOCK
+.........
+.........
+#END_BLOCK
+
+---------------------------------------------------------------------------------------------------------------
+
+    <directory>
+	<tmp value="..."/>
+        <log value="..."/>
+        <processors value="..."/>
+    </directory>
+
+
+---------------------------------------------------------------------------------------------------------------
+Версия 3.0 
+
+У процесоров появилось атрибут procID - идентификатор процессора
+При этом формат командной строки расширяется до: config_file ldrID procID  date [time]
+
+loader
+                                                                                                                                                             
+    /configuration/directory/processors[@value]         -> (directory)
+    /configuration/loader[@name='%s']/processor         -> list_processors
+	                                                                                                                                                             
+example:
+    <loader name="..." timeout="..." retry="..." sleep="...">
+        <processor name="...." procID="..."/>
+    </loader>
