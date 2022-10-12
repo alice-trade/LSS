@@ -1,3 +1,5 @@
+Load Statistics System
+
 Manager:
 <manager name="name">
     <period value="1d"/>	- период
